@@ -24,7 +24,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">Descrição da User</label>
-                            <input type="text" name = "email" class="form-control" id="email" value = "{{$user->name}}">
+                            <input type="text" name = "email" class="form-control" id="email" value = "{{$user->email}}">
                         </div>  
                 </div>
             <div class="modal-footer">

@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use App\Models\User;
 class UserController extends Controller
 {
     public function EditarUser($id){
         $user = User::where("id",$id)->first();
-        return view("user.alterar",compact("user"));
+        return view("estado.alterarUser",compact("user"));
     }
 
     public function ExecutaAlteracao(Request $request){
@@ -16,9 +16,9 @@ class UserController extends Controller
         $dado_email = $request->input("email");
         $id = $request->input("id");
         $user = User::where("id",$id)->first();
-        $user->est_nome = $dado_name;
-        $user->est_descricao = $dado_email;
+        $user->name = $dado_name;
+        $user->email = $dado_email;
         $user->save();
-        return redirect()->route();
+        return redirect()->route('user_upd',['id' => $id]);
     }
 }
