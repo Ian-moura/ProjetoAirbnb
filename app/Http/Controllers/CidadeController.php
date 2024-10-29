@@ -16,4 +16,5 @@ class CidadeController extends Controller
 
         return $cidades; // Retorna a coleção de cidades
     }
+
 }

@@ -4,64 +4,70 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Estado;
+use App\Models\Propriedade;
+use App\Models\Review;
+
+
 class EstadoController extends Controller
 {
+    protected $cidadeController;
+
+    public function __construct(CidadeController $cidadeController)
+    {
+        $this->cidadeController = $cidadeController;
+    }
+
     public function index()
     {
-        // Busca todos os estados ativos
-        $estados = Estado::get();
-
-        // Array que armazenará os estados com suas cidades
-        $estadosComCidades = [];
-
-        $cidadeController = new CidadeController;
-        // Para cada estado, busca 5 cidades e adiciona ao array
-        foreach ($estados as $estado) {
-            // Busca as 5 primeiras cidades para o estado atual
-            $cidades = $cidadeController->getCidadesPorEstado($estado->id);
-
-            // Adiciona ao array associando o estado com suas cidades
-            $estadosComCidades[] = [
-                'estado' => $estado,  // Estado atual
-                'cidades' => $cidades // Cidades desse estado
-            ];
-        }
-
-        // Retorna os estados com suas respectivas cidades para a view
-        return view('estado.index', compact('estadosComCidades'));
-    }
-
-    public function IncluirEstado(Request $request){
-        $est_nome = $request->input("est_nome");
-        $est_descricao = $request->input("est_descricao");
+        // Busca estados com suas cidades associadas
+        $estadosComCidades = Estado::with('cidades')->get();
         
-        $nova = new Estado;
-        $nova->est_nome = $est_nome;
-        $nova->est_descricao = $est_descricao;
-        $nova->save();
+        // Busca todas as propriedades e conta as avaliações associadas
+        $propriedades = Propriedade::withCount('reviews')
+        ->selectRaw('(SELECT AVG(rating) FROM reviews WHERE property_id = propriedades.id) as average_rating') 
+        ->get();
 
-        return redirect("/estado");
+        // Retorna a view com estados e propriedades
+        return view('estado.index', compact('estadosComCidades', 'propriedades'));
     }
 
-    public function ExcluirEstado($id){
-        $est = Estado::where("id",$id)->first();
-        $est->est_ativo = 0;
-        $est->save();
+    public function incluirEstado(Request $request)
+    {
+        $validatedData = $request->validate([
+            'est_nome' => 'required|string|max:255',
+            'est_descricao' => 'nullable|string',
+        ]);
+
+        $estado = Estado::create($validatedData);
+
+        return redirect()->route('estado.index')->with('success', 'Estado incluído com sucesso.');
     }
 
-    public function EditarEstado($id){
-        $estado = Estado::where("id",$id)->first();
-        return view("estado.alterar",compact("estado"));
+    public function excluirEstado($id)
+    {
+        $estado = Estado::findOrFail($id);
+        $estado->update(['est_ativo' => 0]);
+
+        return redirect()->route('estado.index')->with('success', 'Estado excluído com sucesso.');
     }
 
-    public function ExecutaAlteracao(Request $request){
-        $dado_nome = $request->input("est_nome");
-        $dado_descricao = $request->input("est_descricao");
-        $id = $request->input("id");
-        $estado = Estado::where("id",$id)->first();
-        $estado->est_nome = $dado_nome;
-        $estado->est_descricao = $dado_descricao;
-        $estado->save();
-        return redirect("/estado");
+    public function editarEstado($id)
+    {
+        $estado = Estado::findOrFail($id);
+        return view("estado.alterar", compact("estado"));
+    }
+
+    public function executaAlteracao(Request $request)
+    {
+        $validatedData = $request->validate([
+            'est_nome' => 'required|string|max:255',
+            'est_descricao' => 'nullable|string',
+            'id' => 'required|exists:estados,id',
+        ]);
+
+        $estado = Estado::findOrFail($validatedData['id']);
+        $estado->update($validatedData);
+
+        return redirect()->route('estado.index')->with('success', 'Estado alterado com sucesso.');
     }
 }

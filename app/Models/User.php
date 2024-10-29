@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -41,4 +41,15 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    // Definindo relacionamentos
+    public function propriedades()
+    {
+        return $this->hasMany(Propriedade::class, 'user_id'); // Relacionamento com Propriedade
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'user_id'); // Relacionamento com Review
+    }
 }
